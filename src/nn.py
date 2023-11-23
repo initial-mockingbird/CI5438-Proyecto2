@@ -278,9 +278,6 @@ class NN:
       
       train_cost = self.output_layer.get_cost(activations[-1], self.T_train)
       train_costs.append(train_cost)
-      if(abs(train_cost) < self.epsilon):
-        print("parada por convergencia!")
-        return (train_costs,batch_costs)
       
     return (train_costs,batch_costs)
       
