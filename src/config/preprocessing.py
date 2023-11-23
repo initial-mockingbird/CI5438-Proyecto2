@@ -18,6 +18,7 @@ DATA_MAPPER =\
   , Data_Types['unsigned small int'] : pd.UInt8Dtype()
   , Data_Types['string']             : pd.StringDtype()
   , Data_Types['numeric']            : pd.Float32Dtype()
+  #, Data_Types['small_numeric']      : pd.Float16Dtype()
   }
 
 

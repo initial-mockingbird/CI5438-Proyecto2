@@ -1,3 +1,4 @@
+from decimal import DivisionByZero
 import pandas as pd
 import numpy as np
 import random
@@ -21,7 +22,11 @@ def logistic(X):
   return 1 / (1 + np.exp(-X))
 
 def softmax(X):
-  return np.exp(X) / np.sum(np.exp(X), axis=0)
+  #np.seterr(all='raise')
+  #np.seterr(all='warn')
+  # under/over flow fix
+  z = X - np.max(X,axis=-1,keepdims=True)
+  return np.exp(z) / np.sum(np.exp(z), axis=1, keepdims=True)
 
 functions =\
   { "logistic": logistic
@@ -68,25 +73,14 @@ class Layer:
 
 class OutputLayer(Layer):
 
-  def __init__(self,layer : Layer,method = "mse") -> None:
-    #super().__init__()
-    self.layer = layer
-    self.cost = mse if method == "mse" else cross
-    self.grad = mse_grad if method == "mse" else cross_grad
   def get_params(self):
     raise NotImplementedError("get_params_iter intentionally not implemented for OutputLayer")
 
   def W_grad(self, X=None, upstream_grad=None):
     raise NotImplementedError("W_grad intentionally not implemented for OutputLayer")
   
-  def get_output(self,X):
-    return self.layer.get_output(X)
-  
-  def X_grad(self, Y,T, upstream_grad = None):
-    return self.grad(Y,T)
-
   def get_cost(self,Y ,T):
-    return self.cost(Y,T)
+    raise NotImplementedError
 
 class Lineal_Layer(Layer):
    
@@ -119,15 +113,37 @@ class Logistic(Layer):
   def X_grad(self,Y : np.ndarray,upstream_grad : np.ndarray,T = None) -> np.ndarray:
     return logistic_derivative(Y) * upstream_grad
 
+class LogisticOutput(OutputLayer):
+  
+  def get_output(self,X):
+    return logistic(X)
 
-class SoftMax(Layer):
+  def X_grad(self, Y,T, upstream_grad = None):
+    return (Y - T) / Y.shape[0]
+
+  def get_cost(self,Y ,T):
+    delta = Y - T
+    return - (Y * np.log(T + 1e-7) + (1-Y)*np.log(1-T + 1e-7)).sum() / Y.shape[0]
+
+class SoftMaxOutput(OutputLayer):
+  def get_params(self):
+    raise NotImplementedError("get_params_iter intentionally not implemented for OutputLayer")
+
+  def W_grad(self, X=None, upstream_grad=None):
+    raise NotImplementedError("W_grad intentionally not implemented for OutputLayer")
+  
   def get_output(self,X):
     return softmax(X)
-  def X_grad(self, Y = None, upstream_grad=None, T=None):
-    raise NotImplementedError
+
+  def X_grad(self, Y,T, upstream_grad = None):
+    return (Y - T) / Y.shape[0]
+
+  def get_cost(self,Y ,T):
+    return - (T * np.log(Y)).sum() / Y.shape[0]
+  
 
 class NN:
-  def __init__(self,X_train,T_train,learning_rate = 1e-1, max_iter=300) -> None:
+  def __init__(self,X_train,T_train,learning_rate = 1e-1, max_iter=300,epsilon=1e-7) -> None:
     self.layers = []
     self.output_layer : OutputLayer | None = None 
     self.X_train = X_train
@@ -135,9 +151,10 @@ class NN:
     self.learning_rate = learning_rate
     self.max_iter = max_iter
     self.validation   = 5
-    self.X_validation = X_train[:self.validation,:]
-    self.T_validation = T_train[:self.validation] #T_train[:self.validation,:]
+    #self.X_validation = X_train[:self.validation,:]
+    #self.T_validation = T_train[:self.validation] #T_train[:self.validation,:]
     self.batch_size = 25
+    self.epsilon = epsilon
 
   def add_layer(self,layer : Layer):
     self.layers.append(layer)
@@ -258,8 +275,14 @@ class NN:
         self._update_params(W_grads)
       # Get full training cost for future analysis (plots)
       activations = self._forward(self.X_train)
+      
       train_cost = self.output_layer.get_cost(activations[-1], self.T_train)
       train_costs.append(train_cost)
+      if(abs(train_cost) < self.epsilon):
+        print("parada por convergencia!")
+        return (train_costs,batch_costs)
+      
+    return (train_costs,batch_costs)
       
   def predict(self,X):
     return self._forward(X)[-1]
