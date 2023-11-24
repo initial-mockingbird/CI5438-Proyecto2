@@ -39,36 +39,17 @@ def logistic_derivative(X):
 
 # Layers used in this model
 class Layer:
-  """Base class for the different layers.
-  Defines base methods and documentation of methods."""
   
   def get_params(self):
-    """Return an iterator over the parameters (if any).
-    The iterator has the same order as W_grad.
-    The elements returned by the iterator are editable in-place."""
     return None
   
   def W_grad(self, X = None, upstream_grad = None):
-    """Return a list of gradients over the parameters.
-    The list has the same order as the get_params_iter iterator.
-    X is the input.
-    upstream_grad is the gradient at the output of this layer.
-    """
     return None
   
   def get_output(self, X = None):
-    """Perform the forward step linear transformation.
-    X is the input."""
     pass
   
   def X_grad(self, Y = None, upstream_grad = None, T = None):
-    """Return the gradient at the inputs of this layer.
-    Y is the pre-computed output of this layer (not needed in 
-    this case).
-    upstream_grad is the gradient at the output of this layer 
-      (gradient at input of next layer).
-    Output layer uses targets T to compute the gradient based on the 
-      output error instead of upstream_grad"""
     pass
 
 class OutputLayer(Layer):
@@ -93,17 +74,14 @@ class Lineal_Layer(Layer):
     return (self.W,self.b)
 
   def get_output(self, X : np.ndarray) -> np.ndarray:
-    """Perform the forward step linear transformation."""
     return X @ self.W + self.b
       
   def W_grad(self, X : np.ndarray, upstream_grad : np.ndarray) -> tuple[np.ndarray,np.ndarray]:
-    """Return a list of gradients over the parameters."""
     JW : np.ndarray = X.T @ upstream_grad
     Jb : np.ndarray = np.sum(upstream_grad, axis=0) #,keepdims=True)
     return (JW,Jb)
 
   def X_grad(self, Y, upstream_grad : np.ndarray,T = None) -> np.ndarray:
-    """Return the gradient at the inputs of this layer."""
     return upstream_grad  @ self.W.T
   
 
@@ -122,16 +100,10 @@ class LogisticOutput(OutputLayer):
     return (Y - T) / Y.shape[0]
 
   def get_cost(self,Y ,T):
-    delta = Y - T
     return - (Y * np.log(T + 1e-7) + (1-Y)*np.log(1-T + 1e-7)).sum() / Y.shape[0]
 
 class SoftMaxOutput(OutputLayer):
-  def get_params(self):
-    raise NotImplementedError("get_params_iter intentionally not implemented for OutputLayer")
 
-  def W_grad(self, X=None, upstream_grad=None):
-    raise NotImplementedError("W_grad intentionally not implemented for OutputLayer")
-  
   def get_output(self,X):
     return softmax(X)
 
@@ -207,46 +179,6 @@ class NN:
       (dW,db) = layer_backprop_grads
       layer.W = layer.W - self.learning_rate * dW
       layer.b = layer.b - self.learning_rate * db
-  
-  # de aqui para abajo, robao
-  def _gradient_checking(self):
-    assert(self.output_layer is not None)
-    activations = self._forward(self.X_validation)
-    W_grads = self._backward(activations,self.T_validation)
-    e = 1e-4
-    for (layer,layer_Wb_grad) in zip(self.layers + [self.output_layer], W_grads):
-      if layer_Wb_grad is None:
-        continue
-      (layer_W_grad,layer_b_grad) = layer_Wb_grad
-      params = layer.get_params()
-      
-      (W,b) = params
-      for (i,j), value in np.ndenumerate(W):
-        grad_backprop = layer_W_grad[i,j]
-        value += e
-        plus_cost = self.output_layer.get_cost(self._forward(self.X_validation)[-1],self.T_validation)
-        value -= 2*e
-        min_cost = self.output_layer.get_cost(self._forward(self.X_validation)[-1],self.T_validation)
-        value += e
-        grad_num = (plus_cost - min_cost) / (2*e)
-        if not np.isclose(grad_num, grad_backprop):
-          raise ValueError((
-            f'Numerical gradient of {grad_num:.6f} is '
-            'not close to the backpropagation gradient '
-            f'of {grad_backprop:.6f}! Fault found in W'))
-      for i, value in np.ndenumerate(b):
-        grad_backprop = layer_b_grad[i]
-        value += e
-        plus_cost = self.output_layer.get_cost(self._forward(self.X_validation)[-1],self.T_validation)
-        value -= 2*e
-        min_cost = self.output_layer.get_cost(self._forward(self.X_validation)[-1],self.T_validation)
-        value += e
-        grad_num = (plus_cost - min_cost) / (2*e)
-        if not np.isclose(grad_num, grad_backprop):
-          raise ValueError((
-            f'Numerical gradient of {grad_num:.6f} is '
-            'not close to the backpropagation gradient '
-            f'of {grad_backprop:.6f}! Fault found in b'))
   
   def _minibatch(self):
     nb_of_batches = self.X_train.shape[0] // self.batch_size

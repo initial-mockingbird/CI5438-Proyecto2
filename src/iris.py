@@ -98,6 +98,48 @@ def iris_binary_setosa(train,train_t,test,test_t,targets,learning_rate):
   
   return (train_cost,resultados(df,targets,learning_rate,0.2,""))
 
+def iris_binary_one_layer(train,train_t,test,test_t,targets,learning_rate):
+  train = train.astype(float)
+  train_t = train_t.astype(float) 
+  test = test.astype(float)
+  test_t = test_t.astype(float)
+
+
+  nn = NN(train,train_t,learning_rate,10000)
+  nn.add_layer(Lineal_Layer(3,5))
+  nn.add_layer(Logistic())
+  nn.add_layer(Lineal_Layer(5,1))
+  nn.add_output_layer(LogisticOutput())
+  (train_cost,batch_cost) = nn.train()
+  predictions = nn.predict(test)
+
+  delta = predictions - test_t
+  df = pd.DataFrame(delta, columns=targets)
+  
+  return (train_cost,resultados(df,targets,learning_rate,0.2,""))
+
+def iris_binary_two_layer(train,train_t,test,test_t,targets,learning_rate):
+  train = train.astype(float)
+  train_t = train_t.astype(float) 
+  test = test.astype(float)
+  test_t = test_t.astype(float)
+
+
+  nn = NN(train,train_t,learning_rate,10000)
+  nn.add_layer(Lineal_Layer(3,5))
+  nn.add_layer(Logistic())
+  nn.add_layer(Lineal_Layer(5,5))
+  nn.add_layer(Logistic())
+  nn.add_layer(Lineal_Layer(5,1))
+  nn.add_output_layer(LogisticOutput())
+  (train_cost,batch_cost) = nn.train()
+  predictions = nn.predict(test)
+
+  delta = predictions - test_t
+  df = pd.DataFrame(delta, columns=targets)
+  
+  return (train_cost,resultados(df,targets,learning_rate,0.2,""))
+
 def iris_multiclass_single_layer(train,train_t,test,test_t,targets,learning_rate):
   train = train.astype(float)
   train_t = train_t.astype(float)
@@ -109,6 +151,25 @@ def iris_multiclass_single_layer(train,train_t,test,test_t,targets,learning_rate
   nn.add_layer(Logistic())
   nn.add_layer(Lineal_Layer(4,3))
   nn.add_output_layer(SoftMaxOutput())
+  (train_cost,batch_cost) = nn.train()
+  predictions = nn.predict(test)
+
+  delta = predictions - test_t
+  df = pd.DataFrame(delta, columns=targets)
+  
+  return (train_cost, resultados(df,targets,learning_rate,output=""))
+
+def iris_multiclass_single_layer_logistic(train,train_t,test,test_t,targets,learning_rate):
+  train = train.astype(float)
+  train_t = train_t.astype(float)
+  test = test.astype(float)
+  test_t = test_t.astype(float)
+
+  nn = NN(train,train_t,learning_rate,10000)
+  nn.add_layer(Lineal_Layer(3,5))
+  nn.add_layer(Logistic())
+  nn.add_layer(Lineal_Layer(5,3))
+  nn.add_output_layer(LogisticOutput())
   (train_cost,batch_cost) = nn.train()
   predictions = nn.predict(test)
 
@@ -169,7 +230,7 @@ def resultados(df,targets,learning_rate,threshold=1e-7,output="console"):
     s += f"recall: {recall}\n"
     if (output=="console"):
       print(s)
-    results.append((target,accuracy,precision,recall))
+    results.append((target,accuracy,precision,recall,false_positive,false_negative))
   return results
 
 def hex_to_RGB(hex_str):
@@ -235,11 +296,36 @@ def plot_measure(_info,attr,titulo,nombre):
 
 
 def solve_and_tune_iris(path):
+  def max(xs):
+    try:
+      return list(map(np.max,xs))
+    except:
+      return xs
+  def min(xs):
+    try:
+      return list(map(np.min,xs))
+    except:
+      return xs
+  def avr(xs):
+    try:
+      return list(map(np.average,xs))
+    except: 
+      return xs
+  
   _results_multiclass_2 = []
   _results_multiclass_1 = []
   _results_single_setosa = []
   _results_single_versicolor = []
   _results_single_virginica = []
+  _results_single_1l_setosa = []
+  _results_single_1l_versicolor = []
+  _results_single_1l_virginica = []
+  _results_single_2l_setosa = []
+  _results_single_2l_versicolor = []
+  _results_single_2l_virginica = []
+  _results_multiclass_1_logistic = []
+
+
   # multiclass two layer
   for i in np.arange(0.001,0.7,0.05):
     _results_multiclass_2.append((i,iris(path)(iris_multiclass_two_layer,i)))
@@ -248,47 +334,99 @@ def solve_and_tune_iris(path):
     _results_single_setosa.append((i,iris_binary(path,["species:Iris-setosa"])(iris_binary_setosa,i)))
     _results_single_versicolor.append((i,iris_binary(path,["species:Iris-versicolor"])(iris_binary_setosa,i)))
     _results_single_virginica.append((i,iris_binary(path,["species:Iris-virginica"])(iris_binary_setosa,i)))
-  
+    _results_single_1l_setosa.append((i,iris_binary(path,["species:Iris-setosa"])(iris_binary_one_layer,i)))
+    _results_single_1l_versicolor.append((i,iris_binary(path,["species:Iris-versicolor"])(iris_binary_one_layer,i)))
+    _results_single_1l_virginica.append((i,iris_binary(path,["species:Iris-virginica"])(iris_binary_one_layer,i)))
+    _results_single_2l_setosa.append((i,iris_binary(path,["species:Iris-setosa"])(iris_binary_two_layer,i)))
+    _results_single_2l_versicolor.append((i,iris_binary(path,["species:Iris-versicolor"])(iris_binary_two_layer,i)))
+    _results_single_2l_virginica.append((i,iris_binary(path,["species:Iris-virginica"])(iris_binary_two_layer,i)))
+    _results_multiclass_1_logistic.append((i,iris(path)(iris_multiclass_single_layer_logistic,i)))
+    
 
-
+  plot_errors_its(_results_multiclass_1_logistic,"Errores por iteracion","mc_1c_log.PNG")
+  aux = [ (lr,tc,target,acc,p,r,falso_positivo,falso_negativo) for (lr,(tc,result)) in _results_multiclass_1_logistic for (target,acc,p,r,falso_positivo,falso_negativo) in result]
+  targets    =  pd.DataFrame(aux,columns=["lr","tc","target","acc","p","r","falso_positivo","falso_negativo"])
+  plot_measure(targets,"acc","Accuracy para multiclass de 1 capa","mc_1c_log_acc.PNG")
+  grouped = targets.groupby(by=["lr","target"])
+  grouped.agg([max,min,avr]).to_csv("./results/mc_1c_log.csv")
   
   plot_errors_its(_results_multiclass_2,"Errores por iteracion","mc_2c.PNG")
-  aux = [ (lr,tc,target,acc,p,r) for (lr,(tc,result)) in _results_multiclass_2 for (target,acc,p,r) in result]
-  targets    =  pd.DataFrame(aux,columns=["lr","tc","target","acc","p","r"])
+  aux = [ (lr,tc,target,acc,p,r,falso_positivo,falso_negativo) for (lr,(tc,result)) in _results_multiclass_2 for (target,acc,p,r,falso_positivo,falso_negativo) in result]
+  targets    =  pd.DataFrame(aux,columns=["lr","tc","target","acc","p","r","falso_positivo","falso_negativo"])
   plot_measure(targets,"acc","Accuracy para multiclass de 2 capas","mc_2c_acc.PNG")
   grouped = targets.groupby(by=["lr","target"])
-  grouped.describe().to_csv("./results/mc_2c.csv")
+  grouped.agg([max,min,avr]).to_csv("./results/mc_2c.csv")
   
 
-  
+
   plot_errors_its(_results_multiclass_1,"Errores por iteracion","mc_1c.PNG")
-  aux = [ (lr,tc,target,acc,p,r) for (lr,(tc,result)) in _results_multiclass_1 for (target,acc,p,r) in result]
-  targets    =  pd.DataFrame(aux.copy(),columns=["lr","tc","target","acc","p","r"])
+  aux = [ (lr,tc,target,acc,p,r,falso_positivo,falso_negativo) for (lr,(tc,result)) in _results_multiclass_1 for (target,acc,p,r,falso_positivo,falso_negativo) in result]
+  targets    =  pd.DataFrame(aux.copy(),columns=["lr","tc","target","acc","p","r","falso_positivo","falso_negativo"])
   plot_measure(targets,"acc","Accuracy para multiclass de 1 capa","mc_1c_acc.PNG")
   grouped = targets.groupby(by=["lr","target"])
-  grouped.describe().to_csv("./results/mc_1c.csv")
+  grouped.agg([max,min,avr]).to_csv("./results/mc_1c.csv")
   
 
   plot_errors_its(_results_single_setosa,"Errores por iteracion","sc_setosa.PNG")
-  aux = [ (lr,tc,target,acc,p,r) for (lr,(tc,result)) in _results_single_setosa for (target,acc,p,r) in result]
-  targets    =  pd.DataFrame(aux.copy(),columns=["lr","tc","target","acc","p","r"])
+  aux = [ (lr,tc,target,acc,p,r,falso_positivo,falso_negativo) for (lr,(tc,result)) in _results_single_setosa for (target,acc,p,r,falso_positivo,falso_negativo) in result]
+  targets    =  pd.DataFrame(aux.copy(),columns=["lr","tc","target","acc","p","r","falso_positivo","falso_negativo"])
   plot_measure(targets,"acc","Accuracy para clasificador binario setosa","sc_setosa_acc.PNG")
   grouped = targets.groupby(by=["lr"])
-  grouped.describe().to_csv("./results/sc_setosa.csv")
+  grouped.agg([max,min,avr]).to_csv("./results/sc_setosa.csv")
 
   plot_errors_its(_results_single_versicolor,"Errores por iteracion","sc_versicolor.PNG")
-  aux = [ (lr,tc,target,acc,p,r) for (lr,(tc,result)) in _results_single_versicolor for (target,acc,p,r) in result]
-  targets    =  pd.DataFrame(aux.copy(),columns=["lr","tc","target","acc","p","r"])
+  aux = [ (lr,tc,target,acc,p,r,falso_positivo,falso_negativo) for (lr,(tc,result)) in _results_single_versicolor for (target,acc,p,r,falso_positivo,falso_negativo) in result]
+  targets    =  pd.DataFrame(aux.copy(),columns=["lr","tc","target","acc","p","r","falso_positivo","falso_negativo"])
   plot_measure(targets,"acc","Accuracy para clasificador binario versicolor","sc_versicolor_acc.PNG")
   grouped = targets.groupby(by=["lr"])
-  grouped.describe().to_csv("./results/sc_versicolor.csv")
+  grouped.agg([max,min,avr]).to_csv("./results/sc_versicolor.csv")
 
   plot_errors_its(_results_single_virginica,"Errores por iteracion","sc_virginica.PNG")
-  aux = [ (lr,tc,target,acc,p,r) for (lr,(tc,result)) in _results_single_virginica for (target,acc,p,r) in result]
-  targets    =  pd.DataFrame(aux.copy(),columns=["lr","tc","target","acc","p","r"])
+  aux = [ (lr,tc,target,acc,p,r,falso_positivo,falso_negativo) for (lr,(tc,result)) in _results_single_virginica for (target,acc,p,r,falso_positivo,falso_negativo) in result]
+  targets    =  pd.DataFrame(aux.copy(),columns=["lr","tc","target","acc","p","r","falso_positivo","falso_negativo"])
   plot_measure(targets,"acc","Accuracy para clasificador binario virginica","sc_virginica_acc.PNG")
   grouped = targets.groupby(by=["lr"])
-  grouped.describe().to_csv("./results/sc_virginica.csv")
+  grouped.agg([max,min,avr]).to_csv("./results/sc_virginica.csv") 
+
+  plot_errors_its(_results_single_1l_setosa,"Errores por iteracion","sc_l1_setosa.PNG")
+  aux = [ (lr,tc,target,acc,p,r,false_positive,false_negative) for (lr,(tc,result)) in _results_single_1l_setosa for (target,acc,p,r,false_positive,false_negative) in result]
+  targets    =  pd.DataFrame(aux.copy(),columns=["lr","tc","target","acc","p","r","false_positive","false_negative"])
+  plot_measure(targets,"acc","Accuracy para clasificador binario setosa Una capa oculta","sc_setosa_l1_acc.PNG")
+  grouped = targets.groupby(by=["lr"])
+  grouped.agg([max,min,avr]).to_csv("./results/sc_setosa_l1.csv")
+
+  plot_errors_its(_results_single_1l_versicolor,"Errores por iteracion","sc_l1_versicolor.PNG")
+  aux = [ (lr,tc,target,acc,p,r,false_positive,false_negative) for (lr,(tc,result)) in _results_single_1l_versicolor for (target,acc,p,r,false_positive,false_negative) in result]
+  targets    =  pd.DataFrame(aux.copy(),columns=["lr","tc","target","acc","p","r","false_positive","false_negative"])
+  plot_measure(targets,"acc","Accuracy para clasificador binario versicolor Una capa oculta","sc_versicolor_l1_acc.PNG")
+  grouped = targets.groupby(by=["lr"])
+  grouped.agg([max,min,avr]).to_csv("./results/sc_versicolor_l1.csv")
+
+  plot_errors_its(_results_single_1l_virginica,"Errores por iteracion","sc_l1_virginica.PNG")
+  aux = [ (lr,tc,target,acc,p,r,false_positive,false_negative) for (lr,(tc,result)) in _results_single_1l_virginica for (target,acc,p,r,false_positive,false_negative) in result]
+  targets    =  pd.DataFrame(aux.copy(),columns=["lr","tc","target","acc","p","r","false_positive","false_negative"])
+  plot_measure(targets,"acc","Accuracy para clasificador binario virginica Una capa oculta","sc_virginica_l1_acc.PNG")
+  grouped = targets.groupby(by=["lr"])
+  grouped.agg([max,min,avr]).to_csv("./results/sc_virginica_l1.csv")
 
 
+  plot_errors_its(_results_single_2l_setosa,"Errores por iteracion","sc_l2_setosa.PNG")
+  aux = [ (lr,tc,target,acc,p,r,false_positive,false_negative) for (lr,(tc,result)) in _results_single_2l_setosa for (target,acc,p,r,false_positive,false_negative) in result]
+  targets    =  pd.DataFrame(aux.copy(),columns=["lr","tc","target","acc","p","r","false_positive","false_negative"])
+  plot_measure(targets,"acc","Accuracy para clasificador binario setosa Dos capas ocultas","sc_setosa_l2_acc.PNG")
+  grouped = targets.groupby(by=["lr"])
+  grouped.agg([max,min,avr]).to_csv("./results/sc_setosa_l2.csv")
 
+  plot_errors_its(_results_single_2l_versicolor,"Errores por iteracion","sc_l2_versicolor.PNG")
+  aux = [ (lr,tc,target,acc,p,r,false_positive,false_negative) for (lr,(tc,result)) in _results_single_2l_versicolor for (target,acc,p,r,false_positive,false_negative) in result]
+  targets    =  pd.DataFrame(aux.copy(),columns=["lr","tc","target","acc","p","r","false_positive","false_negative"])
+  plot_measure(targets,"acc","Accuracy para clasificador binario versicolor Dos capas ocultas","sc_versicolor_l2_acc.PNG")
+  grouped = targets.groupby(by=["lr"])
+  grouped.agg([max,min,avr]).to_csv("./results/sc_versicolor_l2.csv")
+
+  plot_errors_its(_results_single_2l_virginica,"Errores por iteracion","sc_l2_virginica.PNG")
+  aux = [ (lr,tc,target,acc,p,r,false_positive,false_negative) for (lr,(tc,result)) in _results_single_2l_virginica for (target,acc,p,r,false_positive,false_negative) in result]
+  targets    =  pd.DataFrame(aux.copy(),columns=["lr","tc","target","acc","p","r","false_positive","false_negative"])
+  plot_measure(targets,"acc","Accuracy para clasificador binario virginica Dos capas ocultas","sc_virginica_l2_acc.PNG")
+  grouped = targets.groupby(by=["lr"])
+  grouped.agg([max,min,avr]).to_csv("./results/sc_virginica_l2.csv")
