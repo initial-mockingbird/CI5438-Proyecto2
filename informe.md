@@ -238,3 +238,147 @@ Lo ultimo que queda por inspeccionar es overfitting, o falta de datos. Nosotros 
 
 
 ## Clasificador de spam.
+
+## Preprocesamiento de los datos.
+
+Únicamente se normalizaron los datos. Inicialmente se utilizó normalización por varianza y media, sin embargo esto originó overflows constantemente en la función de activación logística, por lo que se utilizó normalización por mínimo y máximo.
+
+## Experimentos realizados.
+
+Para todos los experimentos realizados, se siguió la regla 70/30 y el threshold utilizado fue de $50%$, es decir que cualquier cualquier respuesta mayor a $0.5$ se considera que el correo inspeccionado es spam.
+
+En total se realizaron 18 experimentos, en donde se varió la topología de la red, el learning rate y la hipótesis utilizada, siendo entrenado cada modelo a lo largo de 5000 iteraciones.
+
+### Topologías de la red.
+
+Se utilizaron las siguientes topologías de red:
+
+- Sin capas ocultas.
+- Una sola capa oculta de 5 neuronas.
+- Dos capas ocultas, la primera de 5 neuronas y la segunda de 2.
+
+Siendo arbitraria la elección de neuronas por capa para estas últimas 2 topologías. Cada una de estas topologías tiene una neurona de salida con activación logística y capas ocultas utilizando esta misma función.
+
+### Learning rate.
+
+Se utilizaron los siguientes valores para el learning rate:
+
+- $0.1$
+- $0.01$
+- $0.001$
+
+### Hipótesis utilizada.
+
+Se utilizaron dos hipótesis: La primera conteniendo todos los parámetros de entrada ofrecidos por el dataset recibido, y la segunda utilizando una cantidad selecta de estos. Esta hipótesis reducida, contiene los siguientes parámetros:
+
+- word_freq_address
+- word_freq_internet
+- word_freq_order
+- word_freq_mail
+- word_freq_receive
+- word_freq_free
+- word_freq_business
+- word_freq_email
+- word_freq_credit
+- word_freq_money
+- word_freq_original
+- word_freq_project
+- char_freq_!
+- char_freq_$
+- capital_run_length_average
+- capital_run_length_longest
+- capital_run_length_total
+
+Se redujo la cantidad de parámetros de entrada debido a que al examinar todos los disponibles, algunos aparentan no tener relación alguna con la clasificación de correos spam, i.e: _word_freq_george, word_freq_650, word_freq_hp, word_freq_1999, word_freq_pm._
+
+## Resultados
+
+Para cada experimento se almacenó el error en cada iteración, y adicionalmente se calcularon las métricas _Precision_ y _Recall_ para la evaluación del rendimiento de las redes, siendo estas dos definidas como:
+
+$PRECISION = {True\_Positives \over {(True\_Positives + False\_Positives)}}$
+
+$RECALL = {True\_Positives \over {(True\_Positives + False\_Negatives)}}$
+
+Donde _Precision_ nos ayudará a medir que proporción de nuestras predicciónes positivas eran realmente positivas, mientras que el _Recall_ nos ayudará a medir que proporción de resultados verdaderamente positivos logra identificar.
+
+En la siguientes secciones se presentan los gráficos y métricas resultantes en cada experimento para ambas hipótesis. Acotamos que las gráficas obtenidas para los experimentos con una topología de 2 capas no presentan una coloración correcta, sin embargo aclaramos que en ambas gráficas la curva con mayor error final representa un learning rate de $0.001$, la curva con el menor error un learning rate de $0.1$, y la restante $0.01$.
+
+### Hipótesis completa
+
+<p align="center">
+  <img src="./imgs/spam_fig_ai_[].png" alt="Spam error por iteracion"/>
+   <figcaption>Error por iteracion para el clasificador binario sin capas ocultas y todos los datos de entrada</figcaption>
+</p>
+
+<p align="center">
+  <img src="./imgs/spam_fig_ai_[4].png" alt="Spam error por iteracion"/>
+   <figcaption>Error por iteracion para el clasificador binario con una capa oculta y todos los datos de entrada</figcaption>
+</p>
+
+<p align="center">
+  <img src="./imgs/spam_fig_ai_[5 2].png" alt="Spam error por iteracion"/>
+   <figcaption>Error por iteracion para el clasificador binario con dos capas ocultas y todos los datos de entrada</figcaption>
+</p>
+
+| Experimento                                                | Precision | Recall |
+|------------------------------------------------------------|----------:|-------:|
+| Hipótesis completa. Sin capas ocultas. Learning Rate 0.1   |     0.91  |   0.86 |
+| Hipótesis completa. Sin capas ocultas. Learning Rate 0.01  |     0.90  |   0.83 |
+| Hipótesis completa. Sin capas ocultas. Learning Rate 0.001 |     0.88  |   0.72 |
+| Hipótesis completa. Una capa oculta. Learning Rate 0.1     |     0.92  |   0.91 |
+| Hipótesis completa. Una capa oculta. Learning Rate 0.01    |     0.91  |   0.87 |
+| Hipótesis completa. Una capa oculta. Learning Rate 0.001   |     0.88  |   0.77 |
+| Hipótesis completa. Dos capas ocultas. Learning Rate 0.1   |     0.90  |   0.93 |
+| Hipótesis completa. Dos capas ocultas. Learning Rate 0.01  |     0.91  |   0.91 |
+| Hipótesis completa. Dos capas ocultas. Learning Rate 0.001 |     0.63  |  0.035 |
+
+### Hipótesis reducida
+<p align="center">
+  <img src="./imgs/spam_fig_si_[].png" alt="Spam error por iteracion"/>
+   <figcaption>Error por iteracion para el clasificador binario sin capas ocultas y menos datos de reducida</figcaption>
+</p>
+
+<p align="center">
+  <img src="./imgs/spam_fig_si_[4].png" alt="Spam error por iteracion"/>
+   <figcaption>Error por iteracion para el clasificador binario con una capa oculta e hipótesis reducida</figcaption>
+</p>
+
+
+<p align="center">
+  <img src="./imgs/spam_fig_si_[5 2].png" alt="Spam error por iteracion"/>
+   <figcaption>Error por iteracion para el clasificador binario con dos capas ocultas e hipótesis reducida</figcaption>
+</p>
+
+
+| Experimento                                                | Precision | Recall |
+|------------------------------------------------------------|----------:|-------:|
+| Hipótesis reducida. Sin capas ocultas. Learning Rate 0.1   |     0.84  |   0.72 |
+| Hipótesis reducida. Sin capas ocultas. Learning Rate 0.01  |     0.82  |   0.62 |
+| Hipótesis reducida. Sin capas ocultas. Learning Rate 0.001 |     0.85  |   0.40 |
+| Hipótesis reducida. Una capa oculta. Learning Rate 0.1     |     0.84  |   0.82 |
+| Hipótesis reducida. Una capa oculta. Learning Rate 0.01    |     0.84  |   0.74 |
+| Hipótesis reducida. Una capa oculta. Learning Rate 0.001   |     0.82  |   0.48 |
+| Hipótesis reducida. Dos capas ocultas. Learning Rate 0.1   |     0.83  |   0.83 |
+| Hipótesis reducida. Dos capas ocultas. Learning Rate 0.01  |     0.84  |   0.81 |
+| Hipótesis reducida. Dos capas ocultas. Learning Rate 0.001 |      0.0  |    0.0 |
+
+## Comparación de hipótesis
+### Error por iteración.
+
+Las gráficas para ambas hipótesis presentan curvas similares para topologías y learning rate equivalentes, donde aquellos experimento realizados con un mayor learning rate reducen con una mayor rapidez el error obtenido que sus contrapartes con un learning rate de menor valor, adicionalmente logrando reducir en mayor medida para las iteraciones finales. Algo a destacar es que para los experimentos realizados con la hipótesis completa, se obtuvo un menor error a comparación que el error obtenido al entrenar con la hipótesis reducida.
+
+### Métricas.
+
+En ambas hipótesis se puede observar que la métrica _Precision_ no varía significativamente en cada experimento, siendo la excepción a esto los experimentos realizados con 2 capas ocultas y un learning rate de $0.001$, los cuales presentan valores significativamente menores a sus contrapartes. Adicionalmente, también es notable como la métrica _Recall_ disminuye su valor junto al valor del learning rate.
+
+Si comparamos ambas hipótesis y sus métricas, notamos que para todos los experimentos realizados con la hipótesis completa las métricas presentan un mayor valor que sus contrapartes realizadas con la hipótesis reducida.
+
+### Qué hipótesis es mejor?
+
+La idea de una hipótesis reducida surge tras examinar la descripción de cada columna de los datos de entrada, y llegar a la conclusión aparente de que no todos estos parámetros de entrada tienen sentido para el problema que queremos resolver, creando así la idea de que al eliminar posibles parámetros no relevantes para nuestro problema tendremos mejores resultados. 
+
+Al comparar los resultados de los experimentos realizados entre ambas hipótesis, claramente la hipótesis completa presenta mejores resultados que su contraparte, lo cual parece tumbar la idea de que la hipótesis reducida es superior dado a la eliminación de parámetros no relevantes. Esto nos lleva a la conclusión de que la elección de una hipótesis es una tarea engañosa, dado a que podemos teorizar que una hipótesis nos va a dar mejores resultados debido a razones aparentemente lógicas, pero al momento de examinar el rendimiento de la red entrenada se demuestra lo contrario. Asi mismó, por más insignificante que pueda parecer un parámetro de entrada para resolver nuestro problema, vale la pena no descartarlo inmediatamente e intentar determinar mediante la experimentación su utilidad para la resolución de este.
+
+## Comparación de cantidad de capas ocultas
+
+Para ambas hipótesis se puede observar en las gráficas como el error de los experimentos con una mayor cantidad de capas ocultas, disminuye respecto a los experimentos análogos de la misma hipótesis pero con una cantidad menor de capas ocultas. La única excepción aparente a esta observación es el error obtenido en los experimentos con dos capas ocultas y un learning rate de $0.001$, posiblemente porque este valor no es lo suficientemente alto para obtener buenos resultados con una topología así.
