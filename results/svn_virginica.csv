@@ -1,0 +1,4 @@
+,acc,acc,acc,p,p,p,r,r,r,falso_positivo,falso_positivo,falso_positivo,falso_negativo,falso_negativo,falso_negativo
+,max,min,avr,max,min,avr,max,min,avr,max,min,avr,max,min,avr
+target,,,,,,,,,,,,,,,
+species:Iris-virginica,[0.8666666666666667],[0.8666666666666667],[0.8666666666666667],[0.9285714285714286],[0.9285714285714286],[0.9285714285714286],[0.9285714285714286],[0.9285714285714286],[0.9285714285714286],[2],[2],[2.0],[2],[2],[2.0]

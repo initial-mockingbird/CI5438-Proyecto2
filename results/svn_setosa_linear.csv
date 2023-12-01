@@ -1,0 +1,4 @@
+,acc,acc,acc,p,p,p,r,r,r,falso_positivo,falso_positivo,falso_positivo,falso_negativo,falso_negativo,falso_negativo
+,max,min,avr,max,min,avr,max,min,avr,max,min,avr,max,min,avr
+target,,,,,,,,,,,,,,,
+species:Iris-setosa,[1.0],[1.0],[1.0],[1.0],[1.0],[1.0],[1.0],[1.0],[1.0],[0],[0],[0.0],[0],[0],[0.0]

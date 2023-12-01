@@ -133,25 +133,11 @@ sus_hyp = [
 ]
 
 
-print('All Input Hypothesis []')
-print("-"*80, flush=True)
-do_experiment(spam_df, all_hyp, [spam.is_spam], [],  learn_rate=[0.1, 0.01, 0.001], out_name = "fig_ai_[].png")
-
-print('All Input Hypothesis [4]')
-print("-"*80, flush=True)
-do_experiment(spam_df, all_hyp, [spam.is_spam], [4], learn_rate=[0.1, 0.01, 0.001], out_name = "fig_ai_[4].png")
 
 print('All Input Hypothesis [5, 2]')
 print("-"*80, flush=True)
 do_experiment(spam_df, all_hyp, [spam.is_spam], [5,2], learn_rate=[0.1, 0.01, 0.001], out_name = "fig_ai_[5 2].png")
 
-print('Suspicious Input Hypothesis []')
-print("-"*80, flush=True)
-do_experiment(spam_df, sus_hyp, [spam.is_spam], [], learn_rate=[0.1, 0.01, 0.001], out_name = "fig_si_[].png")
-
-print('Suspicious Input Hypothesis [4]')
-print("-"*80, flush=True)
-do_experiment(spam_df, sus_hyp, [spam.is_spam], [4], learn_rate=[0.1, 0.01, 0.001], out_name = "fig_si_[4].png")
 
 print('Suspicious Input Hypothesis [5, 2]')
 print("-"*80, flush=True)
